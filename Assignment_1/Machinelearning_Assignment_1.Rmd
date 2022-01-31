@@ -1,1 +1,45 @@
+---
+title: "MachineLearning_Assignment_1"
+author: "Manasa Chelukala"
+date: "1/30/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
 
+
+
+```{r stockexchange}
+stockexchange <- read.csv("C:/Users/HP/Documents/csv file/National_Stock_Exchange_of_India_Ltd.csv")
+stockexchange
+```
+
+```{r}
+View(stockexchange)
+mean(stockexchange$Chng)
+sd(stockexchange$Chng)
+max(stockexchange$Chng)
+min(stockexchange$Chng)
+```
+
+```{r}
+stockexchange$Chng_Ztransformed=(stockexchange$Chng - mean(stockexchange$Chng)) / sd(stockexchange$Chng)
+stockexchange$Chng_Ztransformed
+```
+
+```{r}
+plot(stockexchange$Chng)
+```
+
+```{r}
+hist(stockexchange$Chng)
+```
+
+```{r}
+x <- stockexchange$Chng
+y <- stockexchange$X..Chng
+plot(x,y, main = "National_Stock_Exchange_of_India_Ltd", xlab = "change in stockvalue", ylab = "%Change")
+```
+
+##Reference:
+https://www.kaggle.com/iamsouravbanerjee/nifty50-stocks-dataset
