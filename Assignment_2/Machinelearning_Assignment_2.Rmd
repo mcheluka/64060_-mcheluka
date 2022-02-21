@@ -1,0 +1,172 @@
+---
+title: "Assignment_2"
+author: "Manasa Chelukala"
+date: "2/20/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+#Importing the Dataset
+```{r}
+UniversalBank <- read.csv('C:/Users/HP/Desktop/Machine learning slides/M-3/UniversalBank.csv')
+
+summary(UniversalBank)
+```
+
+#Removing ID & ZIP.Code Variables
+
+```{r}
+UniversalBank$ID <- NULL
+UniversalBank$ZIP.Code <- NULL
+
+summary(UniversalBank)
+```
+
+#Calling Libraries
+
+```{r}
+library(caret)
+library(class)
+```
+
+```{r}
+UniversalBank$Personal.Loan = as.factor(UniversalBank$Personal.Loan) 
+
+summary(UniversalBank)
+```
+
+```{r}
+UniversalBank_norm <- UniversalBank
+```
+#Normalizing the data
+```{r}
+Norm_model <- preProcess(UniversalBank[,-8], 
+                         method = c("center", "scale"))
+UniversalBank_norm[,-8]=predict(Norm_model,UniversalBank[,-8])
+
+summary(UniversalBank_norm)
+```
+#Dividing the data
+```{r}
+Train_Index = createDataPartition(UniversalBank$Personal.Loan,p=0.6, list=FALSE) # 60% reserved for Train
+Train.df=UniversalBank_norm[Train_Index,]
+Validation.df=UniversalBank_norm[-Train_Index,] 
+```
+#TASK-1
+```{r}
+To_Predict=data.frame(Age=40,Experience=10,Income=84,Family=2,CCAvg=2,Education=0,Mortgage=0,
+                      Securities.Account=0,CD.Account=0,Online=1,CreditCard=1)
+print(To_Predict)
+
+To_Predict_norm=predict(Norm_model,To_Predict)
+print(To_Predict_norm)
+
+
+Prediction <-knn(train=Train.df[,1:7,9:12], 
+                 test=To_Predict_norm[,1:7,9:12],
+                 cl=Train.df$Personal.Loan,
+                 k=1)
+print(Prediction)
+
+```
+->Here the customer is classified as '0'.So,the customer doesn't accepts the loan offer.
+
+#TASK-2
+```{r}
+set.seed(123)
+
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 3,
+                           repeats = 2)
+
+searchGrid=expand.grid(k = 1:10)
+
+Knn.model=train(Personal.Loan~., 
+                data=Train.df,
+                method='knn',
+                tuneGrid=searchGrid,
+                trControl = fitControl,)
+
+Knn.model
+
+```
+-> 'k = 3' is the optimum choice for k that also prevents the model from overfitting.
+
+#Task-3
+```{r}
+predictions<-predict(Knn.model,Validation.df)
+
+
+confusionMatrix(predictions,Validation.df$Personal.Loan)
+```
+-> The Confusion matrix for the above k-value.
+
+#Task-4
+```{r}
+To_Predict=data.frame(Age=40,Experience=10,Income=84,Family=2,CCAvg=2,Education=1,Mortgage=0,
+                      Securities.Account=0,CD.Account=0,Online=1,CreditCard=1)
+print(To_Predict)
+
+To_Predict_norm=predict(Norm_model,To_Predict)
+print(To_Predict_norm)
+
+
+Prediction <-knn(train=Train.df[,1:7,9:12], 
+                 test=To_Predict_norm[,1:7,9:12],
+                 cl=Train.df$Personal.Loan,
+                 k=3)
+print(Prediction)
+```
+-> Here the customer is classified as '0'.So,the customer doesn't accepts the loan offer.
+
+#Task-5
+```{r}
+set.seed(123)
+
+train.rows <- sample(rownames(UniversalBank), dim(UniversalBank)[1] * .50)
+
+validation.rows <- sample(setdiff(rownames(UniversalBank), train.rows), dim(UniversalBank)[1]*0.30)
+
+test.rows <- setdiff(rownames(UniversalBank), union(train.rows, validation.rows))
+
+```
+
+```{r}
+train.data <- UniversalBank[train.rows,]
+rownames(train.data) <- NULL 
+
+validation.data <- UniversalBank[validation.rows,]
+rownames(validation.data) <- NULL
+
+test.data <- UniversalBank[test.rows,]
+rownames(validation.data) <- NULL
+```
+
+```{r}
+Test_knn<-knn(train=train.data[,-8],test
+             =test.data[,-8],cl= train.data[,8], k=3)
+
+Validation_knn<-knn(train = train.data[,-8],test = validation.data[,-8],cl = train.data[,8], k=3)
+
+Train_knn<-knn(train = train.data[,-8],test = train.data[,-8],cl = train.data[,8], k=3)
+```
+
+```{r}
+confusionMatrix(Test_knn, test.data[,8])
+```
+->Test Accuracy =  0.886
+```{r}
+confusionMatrix(Validation_knn, validation.data[,8])
+```
+->Validation  Accuracy =  0.9
+
+```{r}
+confusionMatrix(Train_knn, train.data[,8])
+```
+-> Train Accuracy = 0.9488 
+
+-> Here,the classifications should be most accurate on the training data set and least accurate on the test data sets, given that the model is fitted on the training data.
+
+
+
+
